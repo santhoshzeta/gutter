@@ -31,12 +31,12 @@ class SwitchContextManager(object):
     >>>     with switches(gutter, my_switch_name=True):
     >>>         print gutter.active('my_switch_name')
     """
-    def __init__(self, gutter=None, **keys):
-        self._gutter = gutter
+    def __init__(self, gutter_client=None, **keys):
+        self._gutter = gutter_client
         self.keys = keys
 
     @property
-    def gutter_client(self):
+    def gutter(self):
         if self._gutter is None:
             self._gutter = get_gutter_client()
         elif isinstance(self._gutter, basestring):
@@ -54,10 +54,10 @@ class SwitchContextManager(object):
 
     def __enter__(self):
 
-        self.previous_active_func = self.gutter_client.active
+        self.previous_active_func = self.gutter.active
 
-        def patched_active(gutter_client):
-            real_active = gutter_client.active
+        def patched_active(gutter):
+            real_active = gutter.active
 
             def wrapped(key, *args, **kwargs):
                 if key in self.keys:
@@ -67,9 +67,9 @@ class SwitchContextManager(object):
 
             return wrapped
 
-        self.gutter_client.active = patched_active(self.gutter_client)
+        self.gutter.active = patched_active(self.gutter)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.gutter_client.active = self.previous_active_func
+        self.gutter.active = self.previous_active_func
 
 switches = SwitchContextManager
